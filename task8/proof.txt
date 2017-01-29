@@ -1,0 +1,39 @@
+insmod: check perms in eudyptula dir files:
+
+# ls -l eudyptula/
+total 0
+-rw-r--r-- 1 root root 0 Sep  6 22:02 foo
+-rw-rw-rw- 1 root root 0 Sep  6 22:02 id
+-r--r--r-- 1 root root 0 Sep  6 22:02 jiffies
+# pwd
+/sys/kernel/debug
+
+ID:
+
+# cat  id 
+a8a3ead89815
+#  echo foo > id 
+bash: echo: write error: Invalid argument
+# echo a8a3ead89815 > id 
+# echo $?
+0
+
+JIFFIES:
+
+# cat jiffies 
+4296495299
+
+FOO:
+
+# echo "foobar" > foo 
+# cat foo 
+foobar
+
+rmmod:
+
+# ls -l eudyptula
+ls: cannot access eudyptula: No such file or directory
+# pwd 
+/sys/kernel/debug
+# 
+

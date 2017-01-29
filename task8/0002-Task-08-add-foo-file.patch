@@ -1,0 +1,90 @@
+From b7fabe080116f4481d9241b0efcb626027a6a2e1 Mon Sep 17 00:00:00 2001
+From: Sergio Paracuellos <sergio.paracuellos@gmail.com>
+Date: Tue, 6 Sep 2016 20:05:09 +0200
+Subject: [PATCH 2/2] Task 08: add foo file
+
+Signed-off-by: Sergio Paracuellos <sergio.paracuellos@gmail.com>
+---
+ task8.c | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 48 insertions(+)
+
+diff --git a/task8.c b/task8.c
+index 096da3d..d78ba2c 100644
+--- a/task8.c
++++ b/task8.c
+@@ -6,10 +6,14 @@
+ #include <linux/errno.h>
+ #include <linux/debugfs.h>
+ #include <linux/jiffies.h>
++#include <linux/mutex.h>
+ 
+ #define MY_EUDYPTULA_ID "a8a3ead89815"
+ #define MY_EUDYPTULA_ID_LEN 13	/* ID length + final NULL */
+ 
++static DEFINE_MUTEX(foo_mutex);
++static char foo_data[PAGE_SIZE];
++
+ static struct dentry *edentry;
+ 
+ static ssize_t id_read(struct file *file, char __user *buf,
+@@ -46,6 +50,47 @@ static const struct file_operations id_fops = {
+ 	.read = id_read,
+ };
+ 
++static ssize_t foo_write(struct file *file, const char __user *buf,
++			 size_t count, loff_t *ppos)
++{
++	int ret = -EINVAL;
++
++	mutex_lock(&foo_mutex);
++
++	ret =
++	    simple_write_to_buffer(foo_data, sizeof(foo_data), ppos, buf,
++				   count);
++
++	if (ret < 0)
++		ret = -EINVAL;
++
++	mutex_unlock(&foo_mutex);
++
++	return ret;
++}
++
++static ssize_t foo_read(struct file *file, char __user *buf,
++			size_t count, loff_t *ppos)
++{
++	int ret = -EINVAL;
++
++	mutex_lock(&foo_mutex);
++
++	ret =
++	    simple_read_from_buffer(buf, count, ppos, foo_data,
++				    sizeof(foo_data));
++
++	mutex_unlock(&foo_mutex);
++
++	return ret;
++}
++
++static const struct file_operations foo_fops = {
++	.owner = THIS_MODULE,
++	.write = foo_write,
++	.read = foo_read,
++};
++
+ static void __exit task8_exit(void)
+ {
+ 	debugfs_remove_recursive(edentry);
+@@ -64,6 +109,9 @@ static int __init task8_init(void)
+ 	if (!debugfs_create_u64("jiffies", 0444, edentry, (u64 *)&jiffies))
+ 		goto fail;
+ 
++	if (!debugfs_create_file("foo", 0644, edentry, NULL, &foo_fops))
++		goto fail;
++
+ 	pr_debug("Eudyptula Task8 init!\n");
+ 
+ 	return 0;
+-- 
+1.9.1
+
