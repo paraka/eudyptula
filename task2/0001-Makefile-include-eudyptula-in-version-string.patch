@@ -1,0 +1,26 @@
+From 008481ae8c72b71cebf8a7634e5191344ae2b231 Mon Sep 17 00:00:00 2001
+From: Sergio Paracuellos <sergio.paracuellos@gmail.com>
+Date: Thu, 5 May 2016 20:10:19 +0200
+Subject: [PATCH] Makefile: include 'eudyptula' in version string
+
+Signed-off-by: Sergio Paracuellos <sergio.paracuellos@gmail.com>
+---
+ Makefile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 9496df8..0bc438a3 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,7 +1,7 @@
+ VERSION = 4
+ PATCHLEVEL = 6
+ SUBLEVEL = 0
+-EXTRAVERSION = -rc5
++EXTRAVERSION = -eudyptula
+ NAME = Blurry Fish Butt
+ 
+ # *DOCUMENTATION*
+-- 
+1.9.1
+
