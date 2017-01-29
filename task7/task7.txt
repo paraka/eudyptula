@@ -1,0 +1,1 @@
+Linux Inspiron-1545 4.8.0-rc5-next-20160906 #3 SMP Tue Sep 6 15:45:44 CEST 2016 x86_64 x86_64 x86_64 GNU/Linux
