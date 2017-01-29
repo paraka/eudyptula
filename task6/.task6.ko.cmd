@@ -1,1 +1,0 @@
-cmd_/home/keiko/devel/EUDYPTULA/task6/task6.ko := ld -r -m elf_x86_64 -T ./scripts/module-common.lds --build-id  -o /home/keiko/devel/EUDYPTULA/task6/task6.ko /home/keiko/devel/EUDYPTULA/task6/task6.o /home/keiko/devel/EUDYPTULA/task6/task6.mod.o
