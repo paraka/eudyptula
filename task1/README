@@ -1,0 +1,43 @@
+*************************
+EUDYPTULA CHALLENGE TASK1
+*************************
+
+Proof of this module being built, and running, in my kernel.
+
+* Module compilation example 
+
+(NOTE: for changing the sources you can use environment variable KDIR
+and invoke make with -C parameter as kernel module documentation says in 
+https://www.kernel.org/doc/Documentation/kbuild/modules.txt):
+
+$ make
+
+make -C /lib/modules/3.19.0-25-generic/build M=/home/sergio/task1 modules
+make[1]: se ingresa al directorio «/usr/src/linux-headers-3.19.0-25-generic»
+CC [M]  /home/sergio/task1/task1.o
+Building modules, stage 2.
+MODPOST 1 modules
+CC      /home/sergio/task1/task1.mod.o
+LD [M]  /home/sergio/task1/task1.ko
+make[1]: se sale del directorio «/usr/src/linux-headers-3.19.0-25-generic»
+
+* Load module into the kernel and check kernel log:
+
+$ sudo insmod task1.ko 
+$ dmesg | tail -1
+[684669.043106] Hello World!
+
+* Unload module and check kernel log:
+
+$ sudo rmmod task1 
+$ dmesg | tail -1
+[684686.381360] Bye Bye World!
+
+* Clean compilation binaries stuff:
+
+$ make clean
+make -C /lib/modules/3.19.0-25-generic/build M=/home/sergio/task1 clean
+make[1]: se ingresa al directorio «/usr/src/linux-headers-3.19.0-25-generic»
+CLEAN   /home/sergio/task1/.tmp_versions
+CLEAN   /home/sergio/task1/Module.symvers
+make[1]: se sale del directorio «/usr/src/linux-headers-3.19.0-25-generic»
