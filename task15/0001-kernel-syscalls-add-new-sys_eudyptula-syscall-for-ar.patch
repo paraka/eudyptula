@@ -1,0 +1,85 @@
+From 331a1566c607d1a3f0877ff6fb38ba6c2b0ebd94 Mon Sep 17 00:00:00 2001
+From: Sergio Paracuellos <sergio.paracuellos@gmail.com>
+Date: Tue, 27 Sep 2016 06:41:21 +0200
+Subject: [PATCH] kernel: syscalls: add new sys_eudyptula syscall for arch
+ x86_64.
+
+This is for x86_64 architecture and the next available id for it was 329.
+
+This syscall takes two values and mush them together into one
+64bit value (low_id being the lower 32bits of the id, high_id being
+the upper 32bits of the id). If result value matches with eudyptula
+id it returns 0. In other case -EINVAL error code  will be returned.
+
+Signed-off-by: Sergio Paracuellos <sergio.paracuellos@gmail.com>
+---
+ arch/x86/entry/syscalls/syscall_64.tbl |  1 +
+ arch/x86/kernel/Makefile               |  4 ++++
+ arch/x86/kernel/eudyptula.c            | 19 +++++++++++++++++++
+ include/linux/syscalls.h               |  2 ++
+ 4 files changed, 26 insertions(+)
+ create mode 100644 arch/x86/kernel/eudyptula.c
+
+diff --git a/arch/x86/entry/syscalls/syscall_64.tbl b/arch/x86/entry/syscalls/syscall_64.tbl
+index e9ce9c7..494233b 100644
+--- a/arch/x86/entry/syscalls/syscall_64.tbl
++++ b/arch/x86/entry/syscalls/syscall_64.tbl
+@@ -335,6 +335,7 @@
+ 326	common	copy_file_range		sys_copy_file_range
+ 327	64	preadv2			sys_preadv2
+ 328	64	pwritev2		sys_pwritev2
++329 64  eudyptula       sys_eudyptula
+ 
+ #
+ # x32-specific system call numbers start at 512 to avoid cache impact
+diff --git a/arch/x86/kernel/Makefile b/arch/x86/kernel/Makefile
+index 0503f5b..9e6ee98 100644
+--- a/arch/x86/kernel/Makefile
++++ b/arch/x86/kernel/Makefile
+@@ -136,3 +136,7 @@ ifeq ($(CONFIG_X86_64),y)
+ 	obj-$(CONFIG_PCI_MMCONFIG)	+= mmconf-fam10h_64.o
+ 	obj-y				+= vsmp_64.o
+ endif
++
++###
++# eudyptula syscall stuff
++obj-y					+= eudyptula.o
+diff --git a/arch/x86/kernel/eudyptula.c b/arch/x86/kernel/eudyptula.c
+new file mode 100644
+index 0000000..ecb255b
+--- /dev/null
++++ b/arch/x86/kernel/eudyptula.c
+@@ -0,0 +1,19 @@
++#include <linux/kernel.h>
++#include <linux/syscalls.h>
++#include <linux/errno.h>
++
++/*
++ * This syscall takes two values and mush them together into one
++ * 64bit value (low_id being the lower 32bits of the id, high_id being
++ * the upper 32bits of the id). If result value matches with eudyptula
++ * id it returns 0. In other case -EINVAL error code  will be returned.
++ */
++SYSCALL_DEFINE2(eudyptula, unsigned int, high_id, unsigned int, low_id)
++{
++	u64 eudyptula_id = 0xa8a3ead89815;
++
++	if (((u64)high_id << 32 | low_id) == eudyptula_id)
++		return 0;
++	else
++		return -EINVAL;
++}
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index d022390..c1f1f28 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -898,4 +898,6 @@ asmlinkage long sys_copy_file_range(int fd_in, loff_t __user *off_in,
+ 
+ asmlinkage long sys_mlock2(unsigned long start, size_t len, int flags);
+ 
++asmlinkage long sys_eudyptula(unsigned int high_id, unsigned int low_id);
++
+ #endif
+-- 
+1.9.1
+
