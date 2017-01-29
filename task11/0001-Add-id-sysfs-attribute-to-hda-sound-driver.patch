@@ -1,0 +1,129 @@
+From 3c76eec321be1f662ab5d9a686d7138d6f093519 Mon Sep 17 00:00:00 2001
+From: Sergio Paracuellos <sparacuellos@cemitec.com>
+Date: Tue, 20 Sep 2016 13:49:59 +0200
+Subject: [PATCH] Add id sysfs attribute to hda sound driver
+
+A new attribute only for Realtek ALC633 chips.
+
+Signed-off-by: Sergio Paracuellos <sparacuellos@cemitec.com>
+---
+ sound/hda/hdac_device.c |  7 +++++++
+ sound/hda/hdac_sysfs.c  | 56 +++++++++++++++++++++++++++++++++++++++++++++++++
+ sound/hda/local.h       |  2 ++
+ 3 files changed, 65 insertions(+)
+
+diff --git a/sound/hda/hdac_device.c b/sound/hda/hdac_device.c
+index 03c9872..f6f20eb 100644
+--- a/sound/hda/hdac_device.c
++++ b/sound/hda/hdac_device.c
+@@ -145,6 +145,12 @@ int snd_hdac_device_register(struct hdac_device *codec)
+ 		device_del(&codec->dev);
+ 		return err;
+ 	}
++	err = hda_sysfs_eudyptula_init(codec);
++	if (err < 0) {
++		hda_widget_sysfs_exit(codec);
++		device_del(&codec->dev);
++		return err;
++	}
+ 
+ 	return 0;
+ }
+@@ -157,6 +163,7 @@ EXPORT_SYMBOL_GPL(snd_hdac_device_register);
+ void snd_hdac_device_unregister(struct hdac_device *codec)
+ {
+ 	if (device_is_registered(&codec->dev)) {
++		hda_sysfs_eudyptula_exit(codec);
+ 		hda_widget_sysfs_exit(codec);
+ 		device_del(&codec->dev);
+ 	}
+diff --git a/sound/hda/hdac_sysfs.c b/sound/hda/hdac_sysfs.c
+index 42d61bf..ee33966 100644
+--- a/sound/hda/hdac_sysfs.c
++++ b/sound/hda/hdac_sysfs.c
+@@ -9,6 +9,12 @@
+ #include <sound/hdaudio.h>
+ #include "local.h"
+ 
++#define MY_EUDYPTULA_ID		"a8a3ead89815\n"
++#define MY_EUDYPTULA_ID_LEN	13
++#define MY_VENDOR_ID		0x10ec0663 /* Realtek */
++#define MY_CHIP_NAME		"ID 663"
++#define MY_CHIP_NAME_LEN	6
++
+ struct hdac_widget_tree {
+ 	struct kobject *root;
+ 	struct kobject *afg;
+@@ -75,6 +81,56 @@ const struct attribute_group *hdac_dev_attr_groups[] = {
+ };
+ 
+ /*
++ * Eudyptula sysfs 'id' file.
++ *
++ * It appears like /sys/devices/pci0000:00/0000:00:1b.0/hdaudioC0D2/id
++ * only for ALC663 chips of Realtek
++ */
++static ssize_t id_show(struct device *dev, struct device_attribute *attr,
++			char *buf)
++{
++	strncpy(buf, (char *)MY_EUDYPTULA_ID, MY_EUDYPTULA_ID_LEN);
++	return MY_EUDYPTULA_ID_LEN;
++}
++
++static ssize_t id_store(struct device *dev, struct device_attribute *attr,
++			 const char *buf, size_t count)
++{
++	char *id = MY_EUDYPTULA_ID;
++
++	if ((count != MY_EUDYPTULA_ID_LEN)
++	    || (strncmp(id, buf, MY_EUDYPTULA_ID_LEN)))
++		return -EINVAL;
++	else
++		return MY_EUDYPTULA_ID_LEN;
++}
++static DEVICE_ATTR_RW(id);
++
++int hda_sysfs_eudyptula_init(struct hdac_device *codec)
++{
++	int err = 0;
++
++	if ((codec->vendor_id == MY_VENDOR_ID) &&
++	    (strncmp(codec->chip_name, MY_CHIP_NAME, MY_CHIP_NAME_LEN) == 0)) {
++		err = device_create_file(&codec->dev, &dev_attr_id);
++		if (err < 0) {
++			dev_err(&codec->dev,
++			"Eudyptula id file for vendor %x:%s could not be created\n",
++			MY_VENDOR_ID, MY_CHIP_NAME);
++		}
++	}
++
++	return err;
++}
++
++void hda_sysfs_eudyptula_exit(struct hdac_device *codec)
++{
++	if ((codec->vendor_id == MY_VENDOR_ID) &&
++	    (strncmp(codec->chip_name, MY_CHIP_NAME, MY_CHIP_NAME_LEN) == 0))
++		device_remove_file(&codec->dev, &dev_attr_id);
++}
++
++/*
+  * Widget tree sysfs
+  *
+  * This is a tree showing the attributes of each widget.  It appears like
+diff --git a/sound/hda/local.h b/sound/hda/local.h
+index 0d5bb15..c3dac98 100644
+--- a/sound/hda/local.h
++++ b/sound/hda/local.h
+@@ -27,6 +27,8 @@ static inline unsigned int get_wcaps_channels(u32 wcaps)
+ }
+ 
+ extern const struct attribute_group *hdac_dev_attr_groups[];
++int hda_sysfs_eudyptula_init(struct hdac_device *codec);
++void hda_sysfs_eudyptula_exit(struct hdac_device *codec);
+ int hda_widget_sysfs_init(struct hdac_device *codec);
+ void hda_widget_sysfs_exit(struct hdac_device *codec);
+ 
+-- 
+1.9.1
+
