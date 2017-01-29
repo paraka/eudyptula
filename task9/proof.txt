@@ -1,0 +1,35 @@
+Insmod check files creation and permissions:
+
+Inspiron-1545 kernel # ls -l eudyptula/   
+total 0
+-rw-r--r-- 1 root root 4096 Sep 11 15:39 foo
+-rw-rw-r-- 1 root root 4096 Sep 11 15:39 id
+-r--r--r-- 1 root root 4096 Sep 11 15:39 jiffies
+# pwd
+/sys/kernel
+
+ID:
+# cat eudyptula/id 
+a8a3ead89815
+# echo "foobar" > eudyptula/id 
+bash: echo: write error: Invalid argument
+# echo "a8a3ead89815" > eudyptula/id 
+# echo $?
+0
+
+JIFFIES:
+# cat eudyptula/jiffies 
+4300515259
+# cat eudyptula/jiffies 
+4300515436
+
+FOO:
+# echo "foobar" > eudyptula/foo 
+# cat eudyptula/foo 
+foobar
+
+Rmmod: 
+# ls -l eudyptula
+ls: cannot access eudyptula: No such file or directory
+# pwd
+/sys/kernel
